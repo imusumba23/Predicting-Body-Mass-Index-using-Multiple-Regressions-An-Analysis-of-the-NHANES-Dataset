@@ -1,0 +1,171 @@
+---
+title: "MODELING INDIVIDUAL'S BMI by Ian M"
+
+---
+
+```{r include=FALSE}
+library(readr)
+library(mosaic)
+library(ggformula) 
+library(Stat2Data)
+library(tidyverse)
+library(gridExtra)
+library(car)
+library(lares)
+library(fastDummies)
+
+nhanes <- read.csv("~/Library/CloudStorage/OneDrive-TheCollegeofWooster/22-23/Data231 2022/Group Project 1/NHANES-training.csv")
+```
+
+#Gender Distribution on our data set 
+```{r}
+table(nhanes$Gender)
+```
+
+
+#Which variable has the best correlation with BMI
+
+```{r}
+corr_var(nhanes, BMI, top = 30)
+```
+
+#Possible Varibles 
+
+//Correlation is significant at the 0.01 level
+
+-TVHrsDay
+-HealthGen
+-AlcoholYear
+-nBabies
+-nPregnancies 
+-Diabetes 
+-Age1stBaby 
+-DirectChol 
+
+
+#Cleaning data
+```{r}
+#Function that createsdummie variables for our categorical variables of interest
+nhanes <- dummy_cols(nhanes, select_columns ="Diabetes")
+nhanes <- dummy_cols(nhanes, select_columns ="HealthGen")
+nhanes <- dummy_cols(nhanes, select_columns ="TVHrsDay")
+nhanes <- dummy_cols(nhanes, select_columns ="PhysActive")
+nhanes <- dummy_cols(nhanes, select_columns ="Race1")
+nhanes[is.na(nhanes) | nhanes=="Inf"] = NA
+nhanes[is.na(nhanes) | nhanes=="NaN"] = NA
+```
+
+
+// We chose all our predictor variables in the descending order of the strength of their correlation coefficients. DirectChol has the highest correlation coefficient of absolute value 0.362. We decided to not include variables like Age1stBaby, nPregnancies, and nBabies as they had 1361, 1154, and 1219 “NA” values respectively. Our threshold for “NA” values was around 550 for each variable and therefore, we did not include variables that had more “NA” values than the threshold value of 550 in order to make our model more generalizable. Also, we only included one dummy variable for each categorical variable, for example, we only included HealthGen_Excellent for the categorical variable HealthGen. Moreover, we did not include variables like PhysActive_Yes and SleepHrsNight as they did not increase our adjusted R-squared value by more than 1%, which was our primary criteria to add variables to our model. Also, we only included one variable for measuring each systolic and diastolic blood pressure (one that had the strongest correlation coefficient for both the categories: BPSys3 and BPDia1). Lastly, we restricted the number of predictor variables to 10 and hence came up with this model. 
+
+```{r}
+model1.lm <- lm(BMI ~ DirectChol, data=nhanes, na.action = na.omit)
+summary(model1.lm)
+anova(model1.lm)
+model2.lm <- lm(BMI ~ DirectChol+Diabetes_Yes, data=nhanes, na.action = na.omit)
+summary(model2.lm)
+anova(model2.lm)
+model3.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+Age1stBaby, data=nhanes, na.action = na.omit)
+summary(model3.lm)
+modeln.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+Age1stBaby+HealthGen_Excellent+nPregnancies+nBabies+AlcoholYear+HealthGen_Fair+HealthGen_Good+TVHrsDay_0_to_1_hr+ BPSys3+BPSysAve+HealthGen_Vgood+PhysActive_Yes+BPSys2+BPSys1+Testosterone+BPDia1+ DiabetesAge+TVHrsDay_More_4_hr+SleepHrsNight+Race1_Black+BPDiaAve+BPDia3, data=nhanes, na.action = na.omit)
+summary(modeln.lm)
+model4.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent, data=nhanes, na.action = na.omit)
+summary(model4.lm)
+model5.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr, data=nhanes, na.action = na.omit)
+summary(model5.lm)
+model6.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3, data=nhanes, na.action = na.omit)
+summary(model6.lm)
+model7.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes, data=nhanes, na.action = na.omit)
+summary(model7.lm)
+model8.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone, data=nhanes, na.action = na.omit)
+summary(model8.lm)
+model9.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone+BPDia1, data=nhanes, na.action = na.omit)
+summary(model9.lm)
+model10.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone+BPDia1+TVHrsDay_More_4_hr, data=nhanes, na.action = na.omit)
+summary(model10.lm)
+model11.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone+BPDia1+TVHrsDay_More_4_hr+SleepHrsNight, data=nhanes, na.action = na.omit)
+summary(model11.lm)
+model12.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone+BPDia1+TVHrsDay_More_4_hr+SleepHrsNight+Race1_Black, data=nhanes, na.action = na.omit)
+summary(model12.lm)
+model13.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+PhysActive_Yes+Testosterone+BPDia1+TVHrsDay_More_4_hr+SleepHrsNight+Race1_Black+AlcoholYear, data=nhanes, na.action = na.omit)
+summary(model13.lm)
+model14.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+TVHrsDay_More_4_hr+SleepHrsNight+Race1_Black+AlcoholYear, data=nhanes, na.action = na.omit)
+summary(model14.lm)
+anova(model14.lm)
+model15.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+TVHrsDay_More_4_hr+SleepHrsNight+Race1_Black+AlcoholYear, data=nhanes, na.action = na.omit)
+summary(model15.lm)
+model16.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+Race1_Black+AlcoholYear, data=nhanes, na.action = na.omit)
+summary(model16.lm)
+
+
+```
+
+// This will give the number of NA values in these 3 variables and hence why we didn't included them
+
+```{r}
+nhanes %>% count (nPregnancies)
+nhanes %>% count (nBabies)
+nhanes %>% count (Age1stBaby)
+```
+
+
+
+# MODEL 1:
+
+// Model 1 is first attempt at modeling the variables that produced the best output thus far. 
+
+```{r fig.height=8,fig.width=8}
+model17.lm <- lm(BMI ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+Race1_Black+AlcoholYear+DaysMentHlthBad, data=nhanes, na.action = na.omit)
+summary(model17.lm)
+par(mfrow=c(2,2))
+plot(model17.lm)
+gf_histogram(~model17.lm$residuals)
+mean(model17.lm$residual^2)
+```
+
+
+# MODEL 2:
+
+// Model 2 consists applying the log transformation to model 1 to see if we can get better results than model 1. 
+
+```{r fig.height=8,fig.width=8}
+#Applying log transformation 
+log17.lm <- lm(log(BMI) ~ DirectChol+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+Race1_Black+AlcoholYear+DaysMentHlthBad, data=nhanes, na.action = na.omit)
+summary(log17.lm)
+par(mfrow=c(2,2))
+plot(log17.lm)
+gf_histogram(~log17.lm$residuals)
+mean(log17.lm$residual^2)
+```
+
+# MODEL 3 (FINAL MODEL): 
+
+// Model 3 is dedicated to fixing the small errors of linearity and symmetry that occurred in model 2. Applying a log transformation to one of the explanatory variable (log(DirectChol)) helped us resolve those issues.  
+
+```{r fig.height=8,fig.width=8}
+#Applying more transformation in order to improve normality, skewness, and linearity
+log18.lm <- lm(log(BMI) ~ log(DirectChol)+Diabetes_Yes+HealthGen_Excellent+ TVHrsDay_0_to_1_hr+BPSys3+Testosterone+BPDia1+Race1_Black+AlcoholYear+DaysMentHlthBad, data=nhanes, na.action = na.omit)
+summary(log18.lm)
+par(mfrow=c(2,2))
+plot(log18.lm)
+gf_histogram(~log18.lm$residuals)
+mean(log18.lm$residual^2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-
